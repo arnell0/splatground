@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,12 @@
   "bugs": {
     "url": "https://github.com/arnell0/splatground/issues"
   },
-  "homepage": "https://github.com/arnell0/splatground#readme"
+  "homepage": "https://github.com/arnell0/splatground#readme",
+  "dependencies": {
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v19.3.0",
+    "url": "^0.11.0",
+    "uuid": "^8.3.2",
+    "websocket": "^1.0.34",
+    "ws": "^8.5.0"
+  }
 }
