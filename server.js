@@ -3,7 +3,9 @@ var http = require('http');
 var url = require('url');
 const { v4 } = require('uuid');
 
-const maxClients = 2
+// var found = obj.find(e => e.name === 'John');
+
+const maxClients = 5
 
 const server = http.createServer();
 const wssClient = new ws.WebSocketServer({ noServer: true });
@@ -29,15 +31,31 @@ async function handleNewClient(newClient) {
   newClient["workersocket"] = _worker.socket
   _worker.clients.push(newClient)
   clients.push(newClient)
+  console.log("new client to worker: " + _worker.id)
 
-  const greeting = "Hi " + newClient.id + " your assigned worker are " + _worker.id
-  sendMessage(newClient.socket, greeting)
+  var msg = JSON.stringify({
+    workerid: _worker.id,
+    clientid: newClient.id,
+    greeting: "Hi Client my name is John Doe ..."
+  })
+  sendMessage(newClient.socket, msg)
+}
+
+async function handleNewWorker(newWorker) {   
+  workers.push(newWorker)
+  var msg = JSON.stringify({
+    workerid: newWorker.id,
+  })
+  sendMessage(newWorker.socket, msg)
 }
 
 
 wssClient.on('connection', function connection(ws) {
   ws.on('message', function message(data) {
-    // console.log('received: %s', data);
+    const msg = JSON.parse(data)
+    // console.log("Recieved message from client: " + msg.clientid + " to worker: " + msg.workerid)
+    const worker = workers.find(e => e.id === msg.workerid);
+    sendMessage(worker.socket, JSON.stringify(msg))
   });
 
   const newClient = {
@@ -51,15 +69,19 @@ wssClient.on('connection', function connection(ws) {
 
 wssWorker.on('connection', function connection(ws) {
   ws.on('message', function message(data) {
-    // console.log('received: %s', data);
+    const msg = JSON.parse(data)
+    // console.log("Recieved message from worker: " + msg.workerid + " to client: " + msg.clientid)
+    const client = clients.find(e => e.id === msg.clientid);
+    sendMessage(client.socket, JSON.stringify(msg))
   });
+
 
   const newWorker = {
     id: v4(),
     socket: ws,
     clients: [],
   }
-  workers.push(newWorker)
+  handleNewWorker(newWorker)
   console.log("worker connected with id: " + newWorker.id)
 });
 

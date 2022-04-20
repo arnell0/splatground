@@ -1,34 +1,52 @@
 #!/usr/bin/env node
 var WebSocketClient = require('websocket').client;
 
-var worker = new WebSocketClient();
+var client = new WebSocketClient();
 
-worker.on('connectFailed', function(error) {
+client.on('connectFailed', function(error) {
     console.log('Connect Error: ' + error.toString());
 });
 
-worker.on('connect', function(connection) {
+var env = false
+var i = 0
+client.on('connect', function(connection) {
+    const sendMessage = text => {
+        var msgout = JSON.stringify({
+            workerid: env.workerid,
+            clientid: env.clientid,
+            text
+        })
+        connection.sendUTF(msgout)
+    }
+
+    function sendMessageTimeout() {
+        if (connection.connected) {
+            sendMessage(i + " message from client")
+            i++
+            setTimeout(sendMessageTimeout, 1000)
+        }
+    }
+
     console.log('WebSocket Client Connected');
     connection.on('error', function(error) {
         console.log("Connection Error: " + error.toString());
     });
     connection.on('close', function() {
         console.log('echo-protocol Connection Closed');
-    });
+    }); 
     connection.on('message', function(message) {
         if (message.type === 'utf8') {
-            console.log("Received: '" + message.utf8Data + "'");
+            if (!env) {
+                env = JSON.parse(message.utf8Data)
+                console.log(env.greeting)
+                
+                sendMessageTimeout();
+            } else {
+                const msgin = JSON.parse(message.utf8Data)
+                console.log(msgin.text)
+            }
         }
     });
-    
-    // function sendNumber() {
-    //     if (connection.connected) {
-    //         var number = Math.round(Math.random() * 0xFFFFFF);
-    //         connection.sendUTF(number.toString());
-    //         setTimeout(sendNumber, 1000);
-    //     }
-    // }
-    // sendNumber();
 });
 
-worker.connect('ws://localhost:8080/client', 'echo-protocol');
+client.connect('ws://localhost:8080/client', 'echo-protocol');

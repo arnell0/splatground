@@ -7,8 +7,19 @@ worker.on('connectFailed', function(error) {
     console.log('Connect Error: ' + error.toString());
 });
 
+var env = false
+var i = 0
+
 worker.on('connect', function(connection) {
-    
+    const sendMessage = (clientid, text) => {
+        var msgout = JSON.stringify({
+            workerid: env.workerid,
+            clientid,
+            text
+        })
+        connection.sendUTF(msgout)
+    }
+
     console.log('WebSocket Worker Connected');
     connection.on('error', function(error) {
         console.log("Connection Error: " + error.toString());
@@ -18,18 +29,21 @@ worker.on('connect', function(connection) {
     });
     connection.on('message', function(message) {
         if (message.type === 'utf8') {
-            console.log("Received: '" + message.utf8Data + "'");
+            if (message.type === 'utf8') {
+                if (!env) {
+                    env = JSON.parse(message.utf8Data)
+                } else {
+                    const msgin = JSON.parse(message.utf8Data)
+                    console.log(msgin.text)
+                    
+                    sendMessage(msgin.clientid, i + " message from worker")
+                    i++
+                }
+            }
         }
     });
     
-    // function sendNumber() {
-    //     if (connection.connected) {
-    //         var number = Math.round(Math.random() * 0xFFFFFF);
-    //         connection.sendUTF(number.toString());
-    //         console.log(number.toString())
-    //     }
-    // }
-    // sendNumber();
+
 });
 
 worker.connect('ws://localhost:8080/worker', 'echo-protocol');
