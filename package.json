@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/arnell0/splatground#readme",
   "dependencies": {
+    "redis": "^4.0.6",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v19.3.0",
     "url": "^0.11.0",
     "uuid": "^8.3.2",

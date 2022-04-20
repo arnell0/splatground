@@ -8,7 +8,7 @@ worker.on('connectFailed', function(error) {
 });
 
 worker.on('connect', function(connection) {
-    console.log('WebSocket Worker Connected');
+    console.log('WebSocket Client Connected');
     connection.on('error', function(error) {
         console.log("Connection Error: " + error.toString());
     });
@@ -21,14 +21,14 @@ worker.on('connect', function(connection) {
         }
     });
     
-    function sendNumber() {
-        if (connection.connected) {
-            var number = Math.round(Math.random() * 0xFFFFFF);
-            connection.sendUTF(number.toString());
-            setTimeout(sendNumber, 1000);
-        }
-    }
-    sendNumber();
+    // function sendNumber() {
+    //     if (connection.connected) {
+    //         var number = Math.round(Math.random() * 0xFFFFFF);
+    //         connection.sendUTF(number.toString());
+    //         setTimeout(sendNumber, 1000);
+    //     }
+    // }
+    // sendNumber();
 });
 
 worker.connect('ws://localhost:8080/client', 'echo-protocol');

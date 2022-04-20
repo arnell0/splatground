@@ -22,15 +22,14 @@ worker.on('connect', function(connection) {
         }
     });
     
-    function sendNumber() {
-        if (connection.connected) {
-            var number = Math.round(Math.random() * 0xFFFFFF);
-            connection.sendUTF(number.toString());
-            console.log(number.toString())
-            setTimeout(sendNumber, 1000);
-        }
-    }
-    sendNumber();
+    // function sendNumber() {
+    //     if (connection.connected) {
+    //         var number = Math.round(Math.random() * 0xFFFFFF);
+    //         connection.sendUTF(number.toString());
+    //         console.log(number.toString())
+    //     }
+    // }
+    // sendNumber();
 });
 
 worker.connect('ws://localhost:8080/worker', 'echo-protocol');

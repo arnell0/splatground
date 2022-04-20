@@ -3,12 +3,37 @@ var http = require('http');
 var url = require('url');
 const { v4 } = require('uuid');
 
+const maxClients = 2
+
 const server = http.createServer();
 const wssClient = new ws.WebSocketServer({ noServer: true });
 const wssWorker = new ws.WebSocketServer({ noServer: true });
 
-const newClients = []
-const workers = []
+const clients = [] 
+const workers = [] 
+var currentWorker = 0
+
+async function handleNewClient(newClient) {
+  const getWorker = () => { // recursive "load-balancer", returns the next worker that's not busy
+    if (workers[currentWorker].clients.length >= maxClients ) { // if worker is busy, move to the next
+      if (workers.length == currentWorker) currentWorker = 0
+      else currentWorker++
+      getWorker()  // try next worker
+    }
+    const _worker = workers[currentWorker]
+    currentWorker++
+    return _worker
+  }
+  const _worker = getWorker()
+
+  newClient["workersocket"] = _worker.socket
+  _worker.clients.push(newClient)
+  clients.push(newClient)
+
+  const greeting = "Hi " + newClient.id + " your assigned worker are " + _worker.id
+  sendMessage(newClient.socket, greeting)
+}
+
 
 wssClient.on('connection', function connection(ws) {
   ws.on('message', function message(data) {
@@ -18,9 +43,10 @@ wssClient.on('connection', function connection(ws) {
   const newClient = {
     id: v4(),
     socket: ws,
-    worker: '',
   }
-  newClients.push(newClient)
+
+  console.log("client connected with id: " + newClient.id)
+  handleNewClient(newClient)
 });
 
 wssWorker.on('connection', function connection(ws) {
@@ -34,11 +60,13 @@ wssWorker.on('connection', function connection(ws) {
     clients: [],
   }
   workers.push(newWorker)
-  ws.send('Greetings worker your id is: ' + newWorker.id);
+  console.log("worker connected with id: " + newWorker.id)
 });
 
 
-
+function sendMessage(receiver, message) {
+  receiver.send(message)
+}
 
 server.on('upgrade', function upgrade(request, socket, head) {
   const { pathname } = url.parse(request.url);
@@ -57,3 +85,4 @@ server.on('upgrade', function upgrade(request, socket, head) {
 });
 
 server.listen(8080);
+
